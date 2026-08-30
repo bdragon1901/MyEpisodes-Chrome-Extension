@@ -1,0 +1,12 @@
+# Dependencies (there are none today; the test runner is Node's own)
+node_modules/
+
+# Packaged builds
+*.zip
+*.crx
+*.pem
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+*.log

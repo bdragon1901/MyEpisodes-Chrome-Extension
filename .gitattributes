@@ -1,0 +1,5 @@
+# Keep LF in the repository whatever the checkout platform does locally.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary

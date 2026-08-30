@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MyEpisodes Monitor — Settings</title>
+    <link rel="stylesheet" href="../lib/theme.css" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page__head">
+        <img class="brand__mark" src="../icons/icon48.png" alt="" />
+        <div>
+          <h1>MyEpisodes Monitor</h1>
+          <p class="subtitle">Connect the extension to your MyEpisodes account.</p>
+        </div>
+      </header>
+
+      <form id="settings-form" class="card">
+        <div class="field">
+          <label for="uid">Username</label>
+          <input id="uid" name="uid" type="text" autocomplete="username"
+                 spellcheck="false" placeholder="your MyEpisodes username" required />
+          <p class="hint">The <code>uid</code> in your feed URL.</p>
+        </div>
+
+        <div class="field">
+          <label for="pwdmd5">Feed token</label>
+          <div class="input-row">
+            <input id="pwdmd5" name="pwdmd5" type="password" autocomplete="off"
+                   spellcheck="false" placeholder="32-character token" required />
+            <button type="button" id="toggle-token" class="button">Show</button>
+          </div>
+          <p class="hint">
+            The <code>pwdmd5</code> value. Sign in at
+            <a href="https://www.myepisodes.com/rss.php" target="_blank" rel="noreferrer">myepisodes.com</a>
+            and copy it from the end of any personal RSS link. It is stored in your
+            browser profile and only ever sent to myepisodes.com.
+          </p>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="button button--primary">Save</button>
+          <button type="button" id="test" class="button">Test connection</button>
+          <span id="status" class="status" role="status"></span>
+        </div>
+      </form>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MyEpisodes Monitor</title>
+    <link rel="stylesheet" href="../lib/theme.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand__mark" src="../icons/icon32.png" alt="" />
+        <h1 class="brand__name">MyEpisodes</h1>
+      </div>
+      <div class="topbar__actions">
+        <button id="refresh" class="icon-button" title="Refresh" aria-label="Refresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <polyline points="21 3 21 9 15 9" />
+          </svg>
+        </button>
+        <button id="settings" class="icon-button" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button id="tab-yesterday" class="tab" role="tab" data-tab="yesterday"
+              aria-selected="false" aria-controls="panel-yesterday" tabindex="-1">
+        Yesterday
+      </button>
+      <button id="tab-today" class="tab" role="tab" data-tab="today"
+              aria-selected="true" aria-controls="panel-today">
+        Today
+      </button>
+      <button id="tab-tomorrow" class="tab" role="tab" data-tab="tomorrow"
+              aria-selected="false" aria-controls="panel-tomorrow" tabindex="-1">
+        Tomorrow
+      </button>
+      <button id="tab-alltoday" class="tab" role="tab" data-tab="alltoday"
+              aria-selected="false" aria-controls="panel-alltoday" tabindex="-1">
+        All Today
+      </button>
+    </nav>
+
+    <main>
+      <section id="panel-yesterday" class="panel" role="tabpanel" data-panel="yesterday"
+               aria-labelledby="tab-yesterday" hidden>
+        <div class="panel__head">
+          <h2 class="panel__date" data-role="date"></h2>
+          <span class="panel__count" data-role="count" hidden></span>
+        </div>
+        <div data-role="body"></div>
+      </section>
+
+      <section id="panel-today" class="panel" role="tabpanel" data-panel="today"
+               aria-labelledby="tab-today">
+        <div class="panel__head">
+          <h2 class="panel__date" data-role="date"></h2>
+          <span class="panel__count" data-role="count" hidden></span>
+        </div>
+        <div data-role="body"></div>
+      </section>
+
+      <section id="panel-tomorrow" class="panel" role="tabpanel" data-panel="tomorrow"
+               aria-labelledby="tab-tomorrow" hidden>
+        <div class="panel__head">
+          <h2 class="panel__date" data-role="date"></h2>
+          <span class="panel__count" data-role="count" hidden></span>
+        </div>
+        <div data-role="body"></div>
+      </section>
+
+      <section id="panel-alltoday" class="panel" role="tabpanel" data-panel="alltoday"
+               aria-labelledby="tab-alltoday" hidden>
+        <div class="panel__head">
+          <h2 class="panel__date" data-role="date"></h2>
+          <span class="panel__count" data-role="count" hidden></span>
+        </div>
+        <div data-role="body"></div>
+      </section>
+    </main>
+
+    <footer class="statusbar">
+      <span id="status" class="statusbar__text" role="status"></span>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

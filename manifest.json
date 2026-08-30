@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "MyEpisodes Monitor",
+  "version": "0.7.0",
+  "description": "Keep an eye on your MyEpisodes schedule. Today's episodes at a glance.",
+  "author": {
+    "email": "ziv.z19@gmail.com"
+  },
+  "minimum_chrome_version": "111",
+  "permissions": ["storage", "alarms"],
+  "host_permissions": ["https://www.myepisodes.com/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "MyEpisodes Monitor",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

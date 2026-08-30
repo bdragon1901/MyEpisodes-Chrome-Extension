@@ -1,0 +1,136 @@
+:root {
+  color-scheme: light dark;
+
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --panel-hover: #f7f9fc;
+  --border: #e2e7ef;
+  --border-strong: #cfd7e3;
+  --text: #111826;
+  --muted: #667488;
+  --faint: #93a0b3;
+  --accent: #1b7fc4;
+  --accent-hover: #1a72b0;
+  --accent-soft: #e7f2fb;
+  --on-accent: #ffffff;
+  --danger: #c0392f;
+  --success: #17925a;
+  --success-soft: #e8f6ee;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 38, 0.05);
+  --shadow-md: 0 4px 12px rgba(17, 24, 38, 0.09);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1319;
+    --panel: #171d26;
+    --panel-hover: #1d242f;
+    --border: #262e3a;
+    --border-strong: #36404f;
+    --text: #e8ecf2;
+    --muted: #8b98ab;
+    --faint: #6b7889;
+    --accent: #58b0ea;
+    --accent-hover: #6dbcf0;
+    --accent-soft: #12293b;
+    --on-accent: #06121d;
+    --danger: #f0776a;
+    --success: #35b077;
+    --success-soft: #14291f;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.icon-button:hover {
+  background: var(--panel-hover);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.button {
+  padding: 8px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--panel);
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.button:hover {
+  background: var(--panel-hover);
+}
+
+.button--primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.button--primary:hover {
+  background: var(--accent-hover);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

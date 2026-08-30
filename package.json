@@ -1,0 +1,9 @@
+{
+  "name": "myepisodes-monitor",
+  "private": true,
+  "type": "module",
+  "description": "Tooling only. The extension itself is the folder; Chrome ignores this file. The version lives in manifest.json.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
