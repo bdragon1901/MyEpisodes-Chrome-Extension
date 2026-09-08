@@ -2,8 +2,12 @@
   "name": "myepisodes-monitor",
   "private": true,
   "type": "module",
-  "description": "Tooling only. The extension itself is the folder; Chrome ignores this file. The version lives in manifest.json.",
+  "description": "Tooling only -- the extension itself is the folder, and Chrome ignores this file. The version lives in manifest.json. Nothing here ships: the linter is the only dependency, and the tests run on Node's own runner.",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5"
   }
 }

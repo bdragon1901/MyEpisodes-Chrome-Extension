@@ -1,5 +1,12 @@
+/* 480 was a four-tab width and nothing more, which the strip outgrew the first
+   time a tab was added. The squeeze was never only the strip's, though: a
+   card's top line runs show name, network and season badge across the same
+   480, which is what had long titles truncating to "Stuart Fails to Save the
+   Uni...". Chrome allows a popup up to 800px, so the honest fix for both was
+   to stop rationing the width -- and it is the cards, not the tab count, that
+   still want it. */
 body {
-  width: 480px;
+  width: 540px;
   max-height: 580px;
   display: flex;
   flex-direction: column;
@@ -43,44 +50,117 @@ body {
 
 /* Tabs */
 
+/* Segments rather than the underlined row this used to be. An underline stops
+   carrying once a tab has neighbours on both sides: the marked tab is told
+   apart by a 2px line at its foot, which at this width is a thin thing to hunt
+   for. A filled segment is read at a glance instead, and the shape gives the
+   counts somewhere to sit without a chip of their own.
+
+   6px of strip padding and 8px on each tab put the first label at 14px, in line
+   with the panel heading below it and the brand above.
+
+   The scroll is a safety valve and should not be needed -- the row fits inside
+   540 with room to spare. It is here so that a longer label, a four-digit count
+   or a wider font lands as a strip that slides rather than one that wraps into
+   two rows of tabs. */
 .tabs {
   display: flex;
-  padding: 0 14px;
+  gap: 2px;
+  padding: 6px;
   background: var(--panel);
   border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Not optional next to that overflow. Body is a flex column, and an overflow
+     other than visible drops a flex item's automatic minimum size to zero --
+     so the strip stopped being sized by its own tabs and was squeezed to a 2px
+     line by the list below it, on exactly the long lists This Week produces. */
+  flex: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
-  position: relative;
-  padding: 9px 2px 10px;
-  margin-right: 18px;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
   border: 0;
+  border-radius: 7px;
   background: none;
   color: var(--muted);
+  white-space: nowrap;
   font-size: 12.5px;
   font-weight: 500;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
-.tab:hover {
+/* The marked tab keeps its fill when pointed at -- a hover that greyed it over
+   would read as though the pointer had unmarked it. */
+.tab:not([aria-selected='true']):hover {
+  background: var(--panel-hover);
   color: var(--text);
 }
 
 .tab[aria-selected='true'] {
+  background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
 }
 
-.tab[aria-selected='true']::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 -1px 0;
-  height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: var(--accent);
+/* The day's count, carried on the tab so the whole strip can be read across
+   without opening anything.
+
+   A bare figure beside the label read as part of the word next to it --
+   "Today 3" scanned like a sentence, not a number worth stopping on. Closing
+   it into a badge gives it its own edge, so five tabs across the strip read
+   as five counts at a glance instead of a line of small print. Tabular
+   figures and a fixed height keep the badge from stretching sideways as a
+   1 grows into a 12. */
+.tab__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--border-strong);
+  color: var(--text);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.tab:last-child {
-  margin-right: 0;
+.tab__count[hidden] {
+  display: none;
+}
+
+/* On the marked tab the badge takes the accent fill itself, rather than a
+   soft tint of it -- the one tab that is already the loudest thing in the
+   strip can afford the contrast, and it is the number most worth reading
+   first. */
+.tab[aria-selected='true'] .tab__count {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* A day with nothing on it still shows its zero, just quieter -- the same
+   retreat the panel's own count makes. An outline instead of a fill keeps a
+   zero from reading as a filled dot the eye has to stop and decode. */
+.tab__count--empty {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--faint);
+}
+
+.tab[aria-selected='true'] .tab__count--empty {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent);
 }
 
 /* Panel */
@@ -197,14 +277,33 @@ main {
   display: grid;
   place-items: center;
   flex: none;
+  position: relative;
   width: 38px;
   height: 38px;
   border-radius: 10px;
+  overflow: hidden;
   color: #fff;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
+}
+
+/* Artwork covers the coloured tile; the initials stay underneath it, which is
+   what a show with no poster, a lookup that failed, and the moment before the
+   image arrives all fall back to.
+
+   No transition on the way in: the image is only put here once it has decoded,
+   so it has nothing to fade up from except the initials it is covering. */
+.episode__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* TVmaze posters are portrait, and their bottom third is usually a title
+     block. Bias the crop up towards the key art. */
+  object-position: center 32%;
 }
 
 .episode__text {
@@ -228,12 +327,45 @@ main {
   border-left-color: var(--success);
 }
 
-.episode__acquired {
+
+/* A premiere is the one thing in a week of continuing runs worth spotting
+   without reading the rows, so it takes the whole card the way acquired does:
+   tinted, edged, and named in amber. */
+.episode--premiere {
+  border-color: color-mix(in srgb, var(--fresh) 30%, var(--border));
+  border-left: 4px solid var(--fresh);
+  padding-left: 9px;
+  background: var(--fresh-soft);
+}
+
+/* .episode:hover sets border-color outright, which takes the left edge with it.
+   Acquired has the same rule for the same reason. */
+.episode--premiere:hover {
+  border-left-color: var(--fresh);
+}
+
+
+/* Filled rather than bare text: the card behind it is tinted in this same
+   amber, and a soft chip on a soft ground is no chip at all. */
+.episode__premiere {
+  display: inline-flex;
   flex: none;
-  color: var(--success);
-  font-size: 11px;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--fresh);
+  color: var(--on-accent);
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.episode__premiere-icon {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
 }
 
 .episode__show {
@@ -253,6 +385,25 @@ main {
   align-items: center;
   gap: 8px;
   min-width: 0;
+}
+
+/* Filled in from TVmaze once the lookup lands, so it stays hidden rather than
+   holding an empty gap open on a card whose show has no network.
+
+   It is also the one thing on this line that gives way. Everything else here
+   refused to shrink, which left the show name -- the most important of the
+   three -- absorbing every pixel the others would not. Of the three it is the
+   network that can be read half-said, so it yields first and hardest. */
+.episode__network {
+  flex: 0 6 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .episode__code {
@@ -285,6 +436,55 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The two viewer-set marks. Both live on the sub row's own flex context: name
+   is the only flex:1 item there, so these -- like the premiere badge and the
+   time -- fall in behind it at the right edge with no extra positioning. */
+.episode__marks {
+  display: flex;
+  flex: none;
+  gap: 5px;
+}
+
+.episode__mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--faint);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.episode__mark:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.episode__mark-icon {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.1;
+}
+
+.episode__mark--acquired.episode__mark--active {
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.episode__mark--watched.episode__mark--active {
+  border-color: color-mix(in srgb, var(--watched) 40%, var(--border));
+  background: var(--watched-soft);
+  color: var(--watched);
 }
 
 .episode__time {

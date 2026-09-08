@@ -12,37 +12,49 @@
         <img class="brand__mark" src="../icons/icon48.png" alt="" />
         <div>
           <h1>MyEpisodes Monitor</h1>
-          <p class="subtitle">Connect the extension to your MyEpisodes account.</p>
+          <p class="subtitle">One API key connects the extension to your account.</p>
         </div>
       </header>
 
-      <form id="settings-form" class="card">
-        <div class="field">
-          <label for="uid">Username</label>
-          <input id="uid" name="uid" type="text" autocomplete="username"
-                 spellcheck="false" placeholder="your MyEpisodes username" required />
-          <p class="hint">The <code>uid</code> in your feed URL.</p>
-        </div>
+      <!-- One credential, so one form, and no heading of its own: the page
+           title already names what this is, and a second-level heading over a
+           single field would only be there to rank it against something else.
+           The same goes for the label that used to sit beside that heading --
+           nothing is required relative to anything here. -->
+      <form id="api-form" class="card">
+        <p class="intro">
+          The key is what the extension runs on: the Yesterday, Today, Tomorrow
+          and This Week tabs, the toolbar badge, and marking an episode acquired
+          or watched. Without it there is almost nothing to show.
+        </p>
 
         <div class="field">
-          <label for="pwdmd5">Feed token</label>
+          <label for="api-key">API key</label>
           <div class="input-row">
-            <input id="pwdmd5" name="pwdmd5" type="password" autocomplete="off"
-                   spellcheck="false" placeholder="32-character token" required />
-            <button type="button" id="toggle-token" class="button">Show</button>
+            <input id="api-key" name="apiKey" type="password" autocomplete="off"
+                   spellcheck="false" placeholder="myeps_…" />
+            <button type="button" id="toggle-api-key" class="button"
+                    aria-label="Show the API key">Show</button>
           </div>
           <p class="hint">
-            The <code>pwdmd5</code> value. Sign in at
-            <a href="https://www.myepisodes.com/rss.php" target="_blank" rel="noreferrer">myepisodes.com</a>
-            and copy it from the end of any personal RSS link. It is stored in your
-            browser profile and only ever sent to myepisodes.com.
+            Create one on your
+            <a href="https://www.myepisodes.com/api-keys/" target="_blank" rel="noreferrer">MyEpisodes
+            API keys page</a>. It needs <code>read</code> scope for the episode
+            lists and <code>write</code> to mark episodes acquired or watched.
+            The key is stored in your browser profile and only ever sent to
+            api.myepisodes.com.
           </p>
         </div>
 
         <div class="actions">
-          <button type="submit" class="button button--primary">Save</button>
-          <button type="button" id="test" class="button">Test connection</button>
-          <span id="status" class="status" role="status"></span>
+          <div class="actions__row">
+            <button type="submit" class="button button--primary">Save</button>
+            <button type="button" id="test-api-key" class="button">Test key</button>
+            <button type="button" id="remove-api-key" class="button button--danger">
+              Remove key
+            </button>
+          </div>
+          <p id="api-status" class="status" role="status"></p>
         </div>
       </form>
     </main>

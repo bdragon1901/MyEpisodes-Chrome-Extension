@@ -16,6 +16,16 @@
   --danger: #c0392f;
   --success: #17925a;
   --success-soft: #e8f6ee;
+  /* The second mark a card can carry, after acquired's green. Amber because it
+     has to be told apart from that at a glance, on a row that can show both at
+     once. */
+  --fresh: #9a5f08;
+  --fresh-soft: #fdf1e0;
+  /* The one mark that never tints a whole card -- see .episode__mark--watched
+     -- so it only has to be told apart from the others on its own small pill,
+     not against a background already claimed by one of them. */
+  --watched: #7c3aed;
+  --watched-soft: #f1eafe;
   --shadow-sm: 0 1px 2px rgba(17, 24, 38, 0.05);
   --shadow-md: 0 4px 12px rgba(17, 24, 38, 0.09);
 }
@@ -37,6 +47,10 @@
     --danger: #f0776a;
     --success: #35b077;
     --success-soft: #14291f;
+    --fresh: #e2a33f;
+    --fresh-soft: #2c2113;
+    --watched: #a682f0;
+    --watched-soft: #221b38;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
@@ -104,6 +118,9 @@ a {
   border-radius: 8px;
   background: var(--panel);
   font-weight: 500;
+  /* A label is one line. Squeezed in a tight row a button should keep its
+     width and let the row give, not fold itself in half. */
+  white-space: nowrap;
   box-shadow: var(--shadow-sm);
   transition: background 0.12s ease, border-color 0.12s ease;
 }
@@ -121,6 +138,16 @@ a {
 
 .button--primary:hover {
   background: var(--accent-hover);
+}
+
+/* Quiet until it is pointed at -- the colour is a warning, not an invitation. */
+.button--danger {
+  color: var(--danger);
+}
+
+.button--danger:hover {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border-strong));
+  background: color-mix(in srgb, var(--danger) 8%, var(--panel));
 }
 
 .button:disabled {

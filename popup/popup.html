@@ -30,24 +30,28 @@
       </div>
     </header>
 
-    <nav class="tabs" role="tablist">
+    <div class="tabs" role="tablist">
       <button id="tab-yesterday" class="tab" role="tab" data-tab="yesterday"
               aria-selected="false" aria-controls="panel-yesterday" tabindex="-1">
-        Yesterday
+        <span class="tab__label">Yesterday</span>
+        <span class="tab__count" data-role="tab-count" aria-hidden="true" hidden></span>
       </button>
       <button id="tab-today" class="tab" role="tab" data-tab="today"
               aria-selected="true" aria-controls="panel-today">
-        Today
+        <span class="tab__label">Today</span>
+        <span class="tab__count" data-role="tab-count" aria-hidden="true" hidden></span>
       </button>
       <button id="tab-tomorrow" class="tab" role="tab" data-tab="tomorrow"
               aria-selected="false" aria-controls="panel-tomorrow" tabindex="-1">
-        Tomorrow
+        <span class="tab__label">Tomorrow</span>
+        <span class="tab__count" data-role="tab-count" aria-hidden="true" hidden></span>
       </button>
-      <button id="tab-alltoday" class="tab" role="tab" data-tab="alltoday"
-              aria-selected="false" aria-controls="panel-alltoday" tabindex="-1">
-        All Today
+      <button id="tab-week" class="tab" role="tab" data-tab="week"
+              aria-selected="false" aria-controls="panel-week" tabindex="-1">
+        <span class="tab__label">This Week</span>
+        <span class="tab__count" data-role="tab-count" aria-hidden="true" hidden></span>
       </button>
-    </nav>
+    </div>
 
     <main>
       <section id="panel-yesterday" class="panel" role="tabpanel" data-panel="yesterday"
@@ -77,8 +81,8 @@
         <div data-role="body"></div>
       </section>
 
-      <section id="panel-alltoday" class="panel" role="tabpanel" data-panel="alltoday"
-               aria-labelledby="tab-alltoday" hidden>
+      <section id="panel-week" class="panel" role="tabpanel" data-panel="week"
+               aria-labelledby="tab-week" hidden>
         <div class="panel__head">
           <h2 class="panel__date" data-role="date"></h2>
           <span class="panel__count" data-role="count" hidden></span>

@@ -1,14 +1,14 @@
 {
   "manifest_version": 3,
   "name": "MyEpisodes Monitor",
-  "version": "0.7.0",
+  "version": "3.0.1",
   "description": "Keep an eye on your MyEpisodes schedule. Today's episodes at a glance.",
-  "author": {
-    "email": "ziv.z19@gmail.com"
-  },
   "minimum_chrome_version": "111",
   "permissions": ["storage", "alarms"],
-  "host_permissions": ["https://www.myepisodes.com/*"],
+  "host_permissions": [
+    "https://api.tvmaze.com/*",
+    "https://api.myepisodes.com/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MyEpisodes Monitor — Privacy Policy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body {
+    max-width: 760px;
+    margin: 2.5rem auto;
+    padding: 0 1.25rem 4rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.15rem; margin-top: 2.25rem; border-top: 1px solid #e2e2e2; padding-top: 1.5rem; }
+  .updated { color: #666; font-size: 0.9rem; margin-top: 0; }
+  code { background: #f2f2f2; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #e2e2e2; vertical-align: top; }
+  th { background: #f7f7f7; }
+  ul { padding-left: 1.25rem; }
+  li { margin-bottom: 0.4rem; }
+</style>
+</head>
+<body>
+
+<h1>Privacy Policy — MyEpisodes Monitor</h1>
+<p class="updated">Last updated: September 7, 2026</p>
+
+<p>
+  MyEpisodes Monitor is a Chrome extension that shows episodes from your
+  <a href="https://www.myepisodes.com/">MyEpisodes</a> watchlist in the browser
+  toolbar. This page explains what data the extension handles, where it goes,
+  and what control you have over it.
+</p>
+
+<h2>The short version</h2>
+<ul>
+  <li>The extension talks to two servers, both on your behalf and at your direction: <code>api.myepisodes.com</code> (your schedule) and <code>api.tvmaze.com</code> (public show artwork).</li>
+  <li>It has no server of its own. Nothing you do in the extension is sent anywhere except those two APIs.</li>
+  <li>There is no analytics, no advertising, and no tracking of any kind.</li>
+  <li>Your data is never sold or shared with anyone other than the two services above.</li>
+</ul>
+
+<h2>What the extension stores</h2>
+<table>
+  <tr><th>Data</th><th>What it is</th><th>Where it's stored</th></tr>
+  <tr>
+    <td>MyEpisodes API key</td>
+    <td>The credential you generate yourself on MyEpisodes' <a href="https://www.myepisodes.com/api-keys/">API keys page</a> and paste into the extension's settings. It authenticates every request the extension makes on your behalf.</td>
+    <td><code>chrome.storage.sync</code> — Chrome's built-in settings sync. It follows your Chrome profile to any machine you're signed into, the same as a bookmark or a saved preference. It is stored as plain text, not encrypted by the extension.</td>
+  </tr>
+  <tr>
+    <td>Your episode schedule</td>
+    <td>The Yesterday/Today/Tomorrow/This Week lists fetched from your MyEpisodes account, including each episode's acquired/watched status.</td>
+    <td><code>chrome.storage.local</code>, cached for at most one day so the popup can open instantly, then refreshed.</td>
+  </tr>
+  <tr>
+    <td>Show artwork and network name</td>
+    <td>Looked up from TVmaze using the show identifiers your MyEpisodes list already contains. No personal or account information is sent to TVmaze.</td>
+    <td><code>chrome.storage.local</code>, cached for up to a week.</td>
+  </tr>
+</table>
+
+<h2>What the extension sends, and to whom</h2>
+<ul>
+  <li>
+    <strong>api.myepisodes.com</strong> — every request carries your API key as a
+    bearer token, in the <code>Authorization</code> header only (never in a URL),
+    over HTTPS. This is how the extension reads your schedule and how it writes
+    back when you mark an episode acquired or watched. Only your own account's
+    data is requested.
+  </li>
+  <li>
+    <strong>api.tvmaze.com</strong> — asked for public show and episode
+    information (network, artwork) using show/episode identifiers. This is an
+    unauthenticated, public API; your API key and no other account information
+    is ever sent to it.
+  </li>
+</ul>
+<p>
+  No other network requests are made. The extension has no backend of its own —
+  there is no third-party server, in this project or otherwise, that ever sees
+  your API key or your schedule.
+</p>
+
+<h2>Your control over this data</h2>
+<ul>
+  <li>
+    <strong>Remove key</strong>, in the extension's settings page, deletes the
+    API key from <code>chrome.storage.sync</code> and clears every cached list
+    and the toolbar badge.
+  </li>
+  <li>
+    You can revoke the API key at any time from MyEpisodes'
+    <a href="https://www.myepisodes.com/api-keys/">API keys page</a> without
+    changing your MyEpisodes password — this immediately stops the extension
+    (or anything else holding that key) from acting on your account.
+  </li>
+  <li>
+    Uninstalling the extension removes everything Chrome stored for it,
+    including the API key and all cached data.
+  </li>
+</ul>
+
+<h2>Children's privacy</h2>
+<p>
+  MyEpisodes Monitor is not directed at children and does not knowingly collect
+  information from children.
+</p>
+
+<h2>Changes to this policy</h2>
+<p>
+  If what the extension collects or where it sends data changes, this page will
+  be updated and the "Last updated" date above will change accordingly.
+</p>
+
+<h2>Contact</h2>
+<p>
+  Questions about this policy or the extension can be sent to
+  <a href="mailto:bdragon1901@gmail.com">bdragon1901@gmail.com</a>.
+</p>
+
+</body>
+</html>

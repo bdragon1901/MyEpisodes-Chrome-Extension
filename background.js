@@ -1,27 +1,38 @@
 // Keeps today's episode count on the toolbar badge, so the number is there
 // before the popup is ever opened.
 //
-// An MV3 service worker has no DOM and therefore no DOMParser, which is what
-// the popup's RSS parsing is built on. This side only needs a number, so it
-// counts items straight off the raw feed instead -- see fetchFeedCount.
+// This used to count <item> occurrences straight off the raw RSS text, because
+// an MV3 service worker has no DOM and therefore no DOMParser to parse a feed
+// with. The API answers in JSON, which needs no DOM at all, so the worker now
+// runs exactly the same request the Today tab does -- and the two can no longer
+// disagree about what a day holds, which the old split parser could.
 
-import { fetchFeedCount } from './lib/myepisodes.js';
-import { getSettings, isConfigured } from './lib/settings.js';
+import { dayKey, fetchEpisodes } from './lib/api.js';
+import { forgetRetiredSettings, getSettings, isConfigured } from './lib/settings.js';
 
 const ALARM = 'refresh-badge';
 const PERIOD_MINUTES = 30;
 const BADGE_COLOR = '#1b7fc4';
 
-chrome.runtime.onInstalled.addListener(start);
+// onInstalled fires on a fresh install and on every upgrade, which is exactly
+// when the settings 3.0.0 stopped reading want taking out of storage -- see
+// forgetRetiredSettings. It is best-effort: a sweep that fails must not cost the
+// badge its refresh, and the next upgrade will try again.
+chrome.runtime.onInstalled.addListener(() => {
+  forgetRetiredSettings().catch(() => {});
+  start();
+});
 chrome.runtime.onStartup.addListener(start);
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === ALARM) refreshBadge();
 });
 
-// New credentials mean a new count, and clearing them should clear the badge.
+// A new key means a new count, and clearing it should clear the badge. It is
+// the only setting stored, so the name is checked only to stop a later one from
+// costing the badge a refresh it has no reason to make.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'sync' && ('uid' in changes || 'pwdmd5' in changes)) refreshBadge();
+  if (area === 'sync' && 'apiKey' in changes) refreshBadge();
 });
 
 function start() {
@@ -32,14 +43,18 @@ function start() {
 }
 
 async function refreshBadge() {
-  const settings = await getSettings();
-  if (!isConfigured(settings)) {
+  const { apiKey } = await getSettings();
+  if (!isConfigured({ apiKey })) {
     setBadge(0);
     return;
   }
 
   try {
-    setBadge(await fetchFeedCount({ feed: 'today', ...settings }));
+    // The same window the Today tab asks for, so the badge and the tab's own
+    // number are the same number by construction rather than by coincidence.
+    const today = dayKey(0);
+    const items = await fetchEpisodes({ apiKey, from: today, to: today });
+    setBadge(items.length);
   } catch {
     // A blip should not blank a number that was right an hour ago -- leave the
     // badge alone and let the next alarm correct it.

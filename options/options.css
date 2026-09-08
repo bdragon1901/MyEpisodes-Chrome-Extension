@@ -29,6 +29,9 @@ h1 {
   color: var(--muted);
 }
 
+/* The page holds one form, so the panel is the page's whole body rather than
+   the first of a stack: there is no `.card + .card` spacing left to set, and
+   nothing below it to keep a border from being shared with. */
 .card {
   display: flex;
   flex-direction: column;
@@ -46,11 +49,21 @@ h1 {
   gap: 6px;
 }
 
-label,
-.label {
+/* What the key is for, above the field that takes it. A paragraph's worth, so
+   the lines get room rather than setting as a dense block. */
+.intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+label {
   font-weight: 600;
 }
 
+/* One field, but two types: Show flips it to text and back, and the reveal has
+   to change what the field says and nothing about how it looks. */
 input[type='text'],
 input[type='password'] {
   width: 100%;
@@ -97,13 +110,36 @@ code {
 
 .actions {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
   padding-top: 4px;
 }
 
+.actions__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The buttons are their own width and nothing else's. A message used to share
+   the row with them and squeeze "Test key" onto two lines. */
+.actions .button {
+  flex: none;
+}
+
+/* Pushed to the far edge, away from Save and Test -- it undoes what they do. */
+.actions .button--danger {
+  margin-left: auto;
+}
+
+/* On its own line below the buttons, with the line held open whether or not
+   there is anything to say, so the form keeps one height and a message does not
+   shove the page down as it appears. */
 .status {
+  margin: 0;
+  min-height: 17px;
   font-size: 12px;
+  line-height: 1.4;
   color: var(--muted);
 }
 

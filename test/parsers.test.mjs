@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { feedUrl, splitTitle, airTime, countItems } from '../lib/myepisodes.js';
+import { feedUrl, splitTitle, airTime, countItems, isPlaceholder } from '../lib/myepisodes.js';
 
 test('feedUrl carries the credentials and defaults to today', () => {
   const url = new URL(feedUrl({ uid: 'someone', pwdmd5: 'abc123' }));
@@ -59,6 +59,37 @@ test('splitTitle survives a stray bracket inside the episode name', () => {
   const parsed = splitTitle('[ Some Show ][ 01x04 ][ A Title With ] Bracket ][ 29-Aug-2026 ]');
   assert.equal(parsed.show, 'Some Show');
   assert.equal(parsed.episode, 'A Title With ] Bracket');
+});
+
+test('splitTitle reads fields whether or not they are spaced apart', () => {
+  const spaced = splitTitle('[ Show ] [ 01x04 ] [ Title ] [ 29-Aug-2026 ]');
+  assert.equal(spaced.show, 'Show');
+  assert.equal(spaced.code, 'S01E04');
+  assert.equal(spaced.episode, 'Title');
+  assert.equal(spaced.airDate, '29-Aug-2026');
+
+  const tight = splitTitle('[Show][01x04][Title][29-Aug-2026]');
+  assert.deepEqual(tight, spaced);
+});
+
+test('splitTitle keeps the show and episode when there is no season/episode field', () => {
+  // Without a code the whole title used to fall through unparsed, which put
+  // the brackets themselves on the card as the show name.
+  assert.deepEqual(splitTitle('[ Show ][ Title ][ 29-Aug-2026 ]'), {
+    show: 'Show',
+    code: '',
+    episode: 'Title',
+    airDate: '29-Aug-2026',
+    season: null,
+    number: null
+  });
+
+  assert.equal(splitTitle('[ Lone Show ]').show, 'Lone Show');
+});
+
+test('splitTitle falls through when the brackets hold nothing to name', () => {
+  assert.equal(splitTitle('[]').show, '[]');
+  assert.equal(splitTitle('[  ][ 01x04 ]').show, '[  ][ 01x04 ]');
 });
 
 test('splitTitle copes with a missing date field', () => {
@@ -137,4 +168,70 @@ test('countItems reads an empty or non-RSS response as zero', () => {
 
 test('countItems is not fooled by elements that merely start with "item"', () => {
   assert.equal(countItems('<itemization>x</itemization><items>y</items>'), 0);
+});
+
+// MyEpisodes fills an empty day with a single item titled "No Episodes" rather
+// than sending no items, so that one has to be recognised and dropped.
+function item(rawTitle) {
+  return { rawTitle, ...splitTitle(rawTitle) };
+}
+
+test('isPlaceholder recognises the filler item an empty day arrives as', () => {
+  assert.equal(isPlaceholder(item('No Episodes')), true);
+  assert.equal(isPlaceholder(item('[ No Episodes ]')), true);
+  assert.equal(isPlaceholder(item('no episodes today')), true);
+  assert.equal(isPlaceholder(item('No Episode')), true);
+});
+
+test('isPlaceholder leaves real episodes alone', () => {
+  assert.equal(isPlaceholder(item('[ Anna Pigeon ][ 01x04 ][ Hell Is Other People ][ 29-Aug-2026 ]')), false);
+  assert.equal(isPlaceholder(item('Lanterns - 01x03 - OutKast')), false);
+  // A season/episode code is what separates the filler from a show that merely
+  // happens to be called this.
+  assert.equal(isPlaceholder(item('[ No Episodes ][ 01x01 ][ Pilot ]')), false);
+  assert.equal(isPlaceholder(item('Nothing but Trouble')), false);
+  assert.equal(isPlaceholder(item('')), false);
+});
+
+test('countItems does not count the filler item towards the badge', () => {
+  const empty = `<rss><channel><title>tomorrow</title>
+    <item><title>No Episodes</title><link>https://www.myepisodes.com/</link></item>
+  </channel></rss>`;
+  assert.equal(countItems(empty), 0);
+
+  const cdata = '<item><title><![CDATA[ No Episodes ]]></title></item>';
+  assert.equal(countItems(cdata), 0);
+});
+
+// The badge and the popup have to agree about what an item is, or a day reads
+// as one number on the toolbar and a different list inside it. countItems and
+// parseFeed both defer to isPlaceholder for that reason.
+test('countItems judges the filler by the same rule the popup does', () => {
+  // A real show that happens to be called "No Episodes" still carries a code,
+  // which is what isPlaceholder tells the two apart by.
+  const real = '<rss><channel><title>today</title>' +
+    '<item><title>[No Episodes][1x01][Pilot]</title></item></channel></rss>';
+  assert.equal(countItems(real), 1);
+  assert.equal(isPlaceholder({ rawTitle: '[No Episodes][1x01][Pilot]', code: '1x01' }), false);
+});
+
+// Only an item's own title can stand for an item. The channel's sits outside
+// every item and used to be subtracted along with them.
+test('countItems does not read the channel title as a filler item', () => {
+  const feed = `<rss><channel><title>No episodes today</title>
+    <item><title>[ Lanterns ][ 01x03 ][ OutKast ]</title></item>
+  </channel></rss>`;
+  assert.equal(countItems(feed), 1);
+});
+
+test('countItems reads a title tag that carries attributes', () => {
+  assert.equal(countItems('<item><title xml:lang="en">No Episodes</title></item>'), 0);
+});
+
+test('countItems still counts a day that has episodes on it', () => {
+  const feed = `<rss><channel><title>today</title>
+    <item><title>[ Lanterns ][ 01x03 ][ OutKast ]</title></item>
+    <item><title>[ Anna Pigeon ][ 01x04 ][ Hell Is Other People ]</title></item>
+  </channel></rss>`;
+  assert.equal(countItems(feed), 2);
 });
