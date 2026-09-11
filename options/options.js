@@ -1,5 +1,5 @@
 import { ApiError, fetchAccount } from '../lib/api.js';
-import { getSettings, saveSettings } from '../lib/settings.js';
+import { DEFAULTS, getSettings, saveSettings } from '../lib/settings.js';
 import { clearCache } from '../lib/cache.js';
 
 const form = document.getElementById('api-form');
@@ -9,8 +9,13 @@ const testApiKey = document.getElementById('test-api-key');
 const removeApiKey = document.getElementById('remove-api-key');
 const statusLine = document.getElementById('api-status');
 
+const displayForm = document.getElementById('display-form');
+const oldEpisodesDays = document.getElementById('old-episodes-days');
+const displayStatus = document.getElementById('display-status');
+
 const settings = await getSettings();
 apiKey.value = settings.apiKey;
+oldEpisodesDays.value = settings.oldEpisodesDays;
 
 form.addEventListener('input', () => setStatus(''));
 
@@ -69,6 +74,29 @@ removeApiKey.addEventListener('click', async () => {
   await persist('');
   setStatus('Removed — the saved API key is gone.', 'ok');
 });
+
+displayForm.addEventListener('input', () => setDisplayStatus(''));
+
+displayForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const days = clampDays(oldEpisodesDays.value);
+  // Written back so a value the field never actually held -- blank, decimal,
+  // out of range -- reads as what was really saved rather than what was typed.
+  oldEpisodesDays.value = days;
+  await saveSettings({ oldEpisodesDays: days });
+  setDisplayStatus('Saved.', 'ok');
+});
+
+// Whatever the field holds, coerced into a value the Old Episodes window can
+// use -- an integer of at least two days, since the window ends two days ago
+// and anything shorter would leave it with nothing to ask for. Empty or
+// non-numeric falls back to the same default getSettings() would have merged
+// in, rather than saving a value nobody chose.
+function clampDays(value) {
+  const parsed = Math.trunc(Number(value));
+  if (!Number.isFinite(parsed)) return DEFAULTS.oldEpisodesDays;
+  return Math.min(365, Math.max(2, parsed));
+}
 
 // GET /v1/me is documented as carrying the account's timezone, date formats and
 // show counts, but not the names it carries them under -- so every field read
@@ -161,4 +189,9 @@ async function persist(key) {
 function setStatus(message, variant) {
   statusLine.textContent = message;
   statusLine.className = variant ? `status status--${variant}` : 'status';
+}
+
+function setDisplayStatus(message, variant) {
+  displayStatus.textContent = message;
+  displayStatus.className = variant ? `status status--${variant}` : 'status';
 }

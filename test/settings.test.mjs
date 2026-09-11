@@ -38,18 +38,18 @@ test.beforeEach(() => {
   removed.local.length = 0;
 });
 
-test('getSettings answers with the API key and nothing else', async () => {
+test('getSettings answers with the API key, the lookback, and nothing else', async () => {
   sync.apiKey = 'myeps_k';
   // A 2.x install still has these sitting in sync until the sweep runs; they
   // must not come back out as settings.
   sync.uid = 'someone';
   sync.pwdmd5 = 'd41d8cd98f00b204e9800998ecf8427e';
 
-  assert.deepEqual(await getSettings(), { apiKey: 'myeps_k' });
+  assert.deepEqual(await getSettings(), { apiKey: 'myeps_k', oldEpisodesDays: 14 });
 });
 
-test('getSettings falls back to an empty key rather than undefined', async () => {
-  assert.deepEqual(await getSettings(), { apiKey: '' });
+test('getSettings falls back to an empty key and the default lookback', async () => {
+  assert.deepEqual(await getSettings(), { apiKey: '', oldEpisodesDays: 14 });
   assert.equal(isConfigured(await getSettings()), false);
 });
 
