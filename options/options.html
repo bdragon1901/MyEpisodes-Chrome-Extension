@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>MyEpisodes Monitor — Settings</title>
+    <title>Monitor for MyEpisodes — Settings</title>
     <link rel="stylesheet" href="../lib/theme.css" />
     <link rel="stylesheet" href="options.css" />
   </head>
@@ -11,20 +11,20 @@
       <header class="page__head">
         <img class="brand__mark" src="../icons/icon48.png" alt="" />
         <div>
-          <h1>MyEpisodes Monitor</h1>
+          <h1>Monitor for MyEpisodes</h1>
           <p class="subtitle">One API key connects the extension to your account.</p>
         </div>
       </header>
 
-      <!-- One credential, so one form, and no heading of its own: the page
+      <!-- One credential, so no heading of its own on this card: the page
            title already names what this is, and a second-level heading over a
            single field would only be there to rank it against something else.
            The same goes for the label that used to sit beside that heading --
            nothing is required relative to anything here. -->
       <form id="api-form" class="card">
         <p class="intro">
-          The key is what the extension runs on: the Yesterday, Today, Tomorrow
-          and This Week tabs, the toolbar badge, and marking an episode acquired
+          The key is what the extension runs on: every tab from Old Episodes
+          through This Week, the toolbar badge, and marking an episode acquired
           or watched. Without it there is almost nothing to show.
         </p>
 
@@ -57,6 +57,35 @@
           <p id="api-status" class="status" role="status"></p>
         </div>
       </form>
+
+      <form id="display-form" class="card">
+        <div class="field">
+          <label for="old-episodes-days">Old Episodes window</label>
+          <div class="input-row input-row--number">
+            <input id="old-episodes-days" name="oldEpisodesDays" type="number"
+                   min="2" max="365" step="1" inputmode="numeric" />
+            <span class="input-suffix">days back</span>
+          </div>
+          <p class="hint">
+            How far back the Old Episodes tab looks, ending two days ago —
+            Yesterday and Today already cover the two most recent days. Default 14.
+          </p>
+        </div>
+
+        <div class="actions">
+          <div class="actions__row">
+            <button type="submit" class="button button--primary">Save</button>
+          </div>
+          <p id="display-status" class="status" role="status"></p>
+        </div>
+      </form>
+
+      <p class="disclaimer">
+        An independent, unofficial extension. Not affiliated with, endorsed by, or
+        connected to <a href="https://www.myepisodes.com/" target="_blank"
+        rel="noreferrer">MyEpisodes</a>; it only reads and updates your account
+        through the API key you provide.
+      </p>
     </main>
 
     <script type="module" src="options.js"></script>

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "MyEpisodes Monitor",
-  "version": "3.0.1",
-  "description": "Keep an eye on your MyEpisodes schedule. Today's episodes at a glance.",
+  "name": "Monitor for MyEpisodes",
+  "version": "3.2.0",
+  "description": "Your MyEpisodes schedule at a glance. Unofficial; not affiliated with or endorsed by MyEpisodes.",
   "minimum_chrome_version": "111",
   "permissions": ["storage", "alarms"],
   "host_permissions": [
@@ -14,7 +14,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "MyEpisodes Monitor",
+    "default_title": "Monitor for MyEpisodes",
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",

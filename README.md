@@ -1,16 +1,20 @@
-# MyEpisodes Monitor
+# Monitor for MyEpisodes
 
-A Chrome extension (Manifest V3) that surfaces your [MyEpisodes](https://www.myepisodes.com/)
-schedule in the toolbar. **Yesterday**, **Today**, and **Tomorrow** each list the
+An independent, unofficial Chrome extension (Manifest V3) that surfaces your
+[MyEpisodes](https://www.myepisodes.com/) schedule in the toolbar. Not affiliated
+with or endorsed by MyEpisodes. **Yesterday**, **Today**, and **Tomorrow** each list the
 episodes from your watchlist airing that day, each card carrying the account's own
 **Acquired** and **Watched** state; **This Week** is the same list over the whole
 of Monday to Sunday, with anything starting its first episode flagged *New show*
-and edged in amber.
+and edged in amber. **Old Episodes** looks further back than that: everything
+from a configurable number of days ago through two days ago, so it picks up
+right where Yesterday's window stops rather than repeating it.
 
-All four tabs are windows on one endpoint at `api.myepisodes.com` — the same
-request with a wider `from`/`to` for the week — so there is one credential, one
-client, and one shape of item. The personal RSS feed the extension started life
-on is gone, and the second credential with it.
+All five tabs are windows on one endpoint at `api.myepisodes.com` — the same
+request with a wider `from`/`to` for the week, or a caller-chosen one for Old
+Episodes — so there is one credential, one client, and one shape of item. The
+personal RSS feed the extension started life on is gone, and the second
+credential with it.
 
 ## Install (unpacked)
 
@@ -20,8 +24,8 @@ on is gone, and the second credential with it.
 
 ## Settings
 
-One credential, and the whole page is about it. The **API key** is what the
-extension runs on. Each tab is one request:
+One credential and one display setting, each its own card. The **API key** is
+what the extension runs on. Each tab is one request:
 
 ```
 GET https://api.myepisodes.com/v1/me/episodes?from=2026-09-07&to=2026-09-07&date_basis=local
@@ -29,9 +33,11 @@ Authorization: Bearer myeps_…
 ```
 
 This Week asks the same question with a wider window: `from` the Monday and `to`
-the Sunday of the week today falls in. The toolbar badge counts from the Today
-request, and marking an episode acquired or watched writes back through the same
-key. Create one on the
+the Sunday of the week today falls in. Old Episodes asks it with a window whose
+`from` is however many days back the second card's field says, and whose `to` is
+always two days ago — Yesterday already owns the day before today. The toolbar
+badge counts from the Today request, and marking an episode acquired or watched
+writes back through the same key. Create one on the
 [MyEpisodes API keys page](https://www.myepisodes.com/api-keys/): it needs
 `read` scope for the episode lists and `write` to mark episodes, and `write`
 implies `read`, so a single `write` key does everything. The key is sent as a
@@ -43,12 +49,20 @@ there would break the request as well as leaving the key in logs and history.
 and saves the key when the API accepts it — so a successful test is also a save,
 and the confirmation names whatever that response turned out to carry. **Remove
 key** takes it back out of storage, which clears the badge, drops the cached
-lists, and returns the popup to its "connect your account" state. Those three
-buttons and the field they act on are the whole page: the second card is gone,
-and so is the pill that ranked this one above it.
+lists, and returns the popup to its "connect your account" state.
 
-`lib/settings.js` is now `{ apiKey: '' }`, and "configured" is one question
-again. `isConfigured()` wants the key, and its answer decides whether the popup
+The second card is **Old Episodes window**, a single number field — how many
+days back the tab looks, at least 2 since the window ends two days ago. It
+saves on its own, with no test button and nothing to remove: there is always a
+value, `oldEpisodesDays` in `lib/settings.js` defaults it to 14, and a blank or
+out-of-range field is clamped back into `[2, 365]` on save rather than rejected.
+Saving it never clears the cache the way the API key does — see the note on
+`lib/cache.js` below, where the reason is that it does not have to.
+
+`lib/settings.js` is now `{ apiKey: '', oldEpisodesDays: 14 }`, and "configured"
+is one question. `isConfigured()` wants the key alone — the lookback always has
+a default, so it never gates whether the popup can open — and its answer decides
+whether the popup
 opens on a list or on "connect your account". There used to be a second
 question, `hasFeedCredentials()`, and the popup asked per tab rather than once
 for the whole window — an account with a key and no feed token got three working
@@ -82,7 +96,7 @@ a key can be revoked on the API keys page without touching the password, and a
 fresh one pasted into settings. That is the whole of the difference worth
 remembering: the two secrets never cost the same to leak, because only one of
 them could be taken back in place. If only the lists matter to you, a `read` key
-gives you all four tabs, a badge and the premiere flag; a mark attempted with one
+gives you all five tabs, a badge and the premiere flag; a mark attempted with one
 comes back saying the key needs `write` scope rather than failing silently.
 
 It is stored unencrypted in `chrome.storage.sync`, which means Chrome replicates
@@ -96,7 +110,7 @@ before you install this somewhere you do not control.
 manifest.json          MV3 manifest
 background.js          Service worker — alarm-driven badge count
 lib/api.js             api.myepisodes.com client: day and week windows, paging, error kinds
-lib/settings.js        chrome.storage wrapper for the one credential
+lib/settings.js        chrome.storage wrapper for the credential and the lookback setting
 lib/tvmaze.js          TVmaze lookup: MyEpisodes show id to show data
 lib/marks.js           Acquired/watched: how the flags couple, and the write
 lib/cache.js           List cache and the per-show TVmaze cache
@@ -104,7 +118,7 @@ lib/lookup-queue.js    Rate-limited work queue and its token bucket
 lib/episodes.js        Item logic: episode identity, ordering, comparing
 lib/format.js          Times, dates, ranges, counts, initials, avatar colours
 lib/theme.css          Shared design tokens (light + dark)
-popup/                 Toolbar popup — tab bar and the four panels
+popup/                 Toolbar popup — tab bar and the five panels
 options/               Settings page
 test/                  Node tests for everything that is not the DOM
 icons/                 Toolbar icons
@@ -137,22 +151,33 @@ the count chip among them. Wire it up with an entry in the `TABS` array at the t
 of `popup/popup.js`: an `id`, a label, the window it covers, and the empty-state
 copy.
 
-The window is the only interesting field, and there are two ways to say it.
+The window is the only interesting field, and there are three ways to say it.
 `offset` is a day relative to today — `-1`, `0`, `1` — which both dates the
 panel's heading and is the window it fetches, so another day is another line and
-nothing else. `span: 'week'` is the other, and This Week is the only tab that
-sets it: `tabWindow` sends it to `weekRange()` for its `from`/`to`, and
-`panelDate` sends it to `weekOffsets()` for the two dates its heading prints.
-Those are the same arithmetic underneath, which is the point — see the note on
-the week below. There is no `source` field any more, and no fork behind it: a
-tab is `fetchEpisodes({ apiKey, ...tabWindow(tab) })` whatever window it asked
-for.
+nothing else. `span: 'week'` and `span: 'old'` are the other two, one per tab
+that needs more than a single day: `tabWindow` sends `'week'` to `weekRange()`
+for its `from`/`to`, and `panelDate` sends it to `weekOffsets()` for the two
+dates its heading prints — the same arithmetic underneath, which is the point,
+see the note on the week below. `'old'` is `{ from: dayKey(-days), to:
+dayKey(-2) }`, where `days` is the account's `oldEpisodesDays` setting rather
+than a constant — the one place a tab's window reads a setting at all, which is
+why `tabWindow` and `panelDate` both take the current settings as a second
+argument even though the four other tabs never look at it. There is no `source`
+field any more, and no fork behind it beyond that: a tab is
+`fetchEpisodes({ apiKey: settings.apiKey, ...tabWindow(tab, settings) })`
+whatever window it asked for.
 
 A tab's `id` doubles as the name of the cache it keeps, so add it to `LISTS` in
 `lib/cache.js` — that array is the list `clearCache` walks, and an id missing
 from it would keep the previous account's episodes across a credential change.
-`LISTS` is `['yesterday', 'today', 'tomorrow', 'week']`; it used to be read from
-the feed module's `FEEDS`, which nothing has a name in any more.
+`LISTS` is `['old', 'yesterday', 'today', 'tomorrow', 'week']`; it used to be
+read from the feed module's `FEEDS`, which nothing has a name in any more. A
+cache entry whose window can change out from under it — Old Episodes' is the
+only one so far — also needs the window stamped into what gets written, the
+same way every entry already stamps the day it was fetched on: see `windowOf` in
+`lib/cache.js`, which is the one place that has to know which list's window is a
+setting rather than a constant, so a cached list from before the setting changed
+stops matching without anything having to clear it by hand.
 
 There is no acquired axis to wire up, and no *Following* flag either. `acquired`
 and `watched` arrive on every row of every window, so the `onlyunacquired`
@@ -171,7 +196,9 @@ it. It used to belong to All Today, on the grounds that a first episode is only
 news where the list reaches past what is already followed; a week earns it
 differently — seven days is long enough to hold the premiere of something on the
 watchlist that has not started yet, which is worth picking out of a week of
-continuing runs. Both numbers have to be read for it to be true, so an item whose
+continuing runs. **Old Episodes** looks backward rather than forward, the same
+as Yesterday, so nothing in that window is still to be picked up — it does not
+set the flag either. Both numbers have to be read for it to be true, so an item whose
 numbering could not be read is never a premiere, and neither is a daily show
 numbering itself by year (`S2026E172`), nor a row the API marks `special` — a
 pilot-numbered extra is not a series starting. It takes the whole card — amber
@@ -455,14 +482,18 @@ the MyEpisodes password is still the only thing that makes an already-leaked
 value worthless — this only stops the extension being the thing that keeps it.
 
 Cached lists invalidate by version rather than rendering wrong. A cached list is
-only usable when both its `day` and its `version` match, and `LIST_VERSION` is now
-3, so every list 2.x wrote reads as a miss and the tab fetches — rather than a
-list in the old RSS item shape being painted as episodes missing half their
-fields. The old **All Today** cache is a different case: `alltoday` is not in
-`LISTS` any more, so nothing reads it and `clearCache` does not name it. Its one
-key sits in `chrome.storage.local` until the extension's storage is cleared, which
-is a few kilobytes of nothing rather than a correctness problem — the only thing
-that could paint it is a tab with that id.
+only usable when its `day`, its `version`, and (Old Episodes only) its `days`
+all match, and `LIST_VERSION` is now 3, so every list 2.x wrote reads as a miss
+and the tab fetches — rather than a list in the old RSS item shape being painted
+as episodes missing half their fields. `days` is the newer of the three checks:
+Old Episodes' window is a setting rather than a constant, so its cache entry
+also stamps the window size it was fetched with, and a value changed in Settings
+makes the next read a miss the same way a version bump would — see `windowOf` in
+`lib/cache.js`. The old **All Today** cache is a different case: `alltoday` is not
+in `LISTS` any more, so nothing reads it and `clearCache` does not name it. Its
+one key sits in `chrome.storage.local` until the extension's storage is cleared,
+which is a few kilobytes of nothing rather than a correctness problem — the only
+thing that could paint it is a tab with that id.
 
 The TVmaze store is not part of any of this. It carries its own version, it is
 keyed by MyEpisodes show id, and this change touches neither — a show is not tied
@@ -578,10 +609,11 @@ is near quota — the old tier is precisely the space the write needs.
   report itself as a parse failure.
 - The API allows 600 requests per key per wall-clock hour, reported on
   `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`. A popup
-  opening cold spends four — one per tab, since a tab the cache cannot answer for
-  is loaded rather than left bare — plus a page for a week that runs past 200
-  rows, against an allowance of 600. Nothing retries an API call, so `Retry-After`
-  is not read; the popup leaves a stale list up and says how old it is instead.
+  opening cold spends five — one per tab, since a tab the cache cannot answer for
+  is loaded rather than left bare — plus a page for a week, or an Old Episodes
+  window, that runs past 200 rows, against an allowance of 600. Nothing retries an
+  API call, so `Retry-After` is not read; the popup leaves a stale list up and
+  says how old it is instead.
 - `ApiError.kind` is one of `network`, `auth`, `scope`, `rate-limit`, `notfound`,
   `invalid`, `refused`, `unavailable`, `http` and `parse`, and it is the whole of
   what a caller branches on. The API's own `error.code` is not kept: everything

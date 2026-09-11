@@ -1,7 +1,7 @@
 import { ApiError, dayKey, fetchEpisodes, weekOffsets, weekRange } from '../lib/api.js';
 import { lookupShow, TvmazeError } from '../lib/tvmaze.js';
 import { MarkError, nextMark, setMark } from '../lib/marks.js';
-import { getSettings, isConfigured, openSettings } from '../lib/settings.js';
+import { DEFAULTS, getSettings, isConfigured, openSettings } from '../lib/settings.js';
 import { readCache, readCaches, readTvmazeShows, writeCache } from '../lib/cache.js';
 import { createLookupQueue } from '../lib/lookup-queue.js';
 import {
@@ -51,6 +51,17 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 // Each tab's `id` doubles as the name of the cache it keeps -- see LISTS in
 // lib/cache.js.
 const TABS = [
+  {
+    id: 'old',
+    label: 'Old Episodes',
+    // Its own kind of window rather than a fixed offset: how far back it
+    // reaches is a setting, not a constant -- see tabWindow and panelDate.
+    span: 'old',
+    empty: {
+      title: 'Nothing older to show',
+      detail: 'No episodes from your watchlist aired in this window.'
+    }
+  },
   {
     id: 'yesterday',
     label: 'Yesterday',
@@ -184,10 +195,20 @@ const views = new Map(
   })
 );
 
+// The lookback setting, read once when the popup opens. It answers two things
+// that both run before any per-tab load() call does its own settings read: the
+// Old Episodes panel's header date, and whether the shared cache read below can
+// still trust a cached Old Episodes list. A read that fails falls back to the
+// same default getSettings() would have merged in anyway.
+const settingsReady = getSettings().catch(() => DEFAULTS);
+
 // One storage read answers both the tab strip's counts and the first paint of
 // every panel. Asking per panel on top of this made three reads on open where
-// two will do.
-const cachesReady = readCaches().catch(() => new Map());
+// two will do. Old Episodes' window can change out from under a cached list --
+// see lib/cache.js -- so this waits on the setting that names it.
+const cachesReady = settingsReady
+  .then((settings) => readCaches({ days: settings.oldEpisodesDays }))
+  .catch(() => new Map());
 
 // A list says what is airing; the artwork behind each card comes from TVmaze.
 // Decoration only: a lookup that fails leaves the card exactly as it was drawn.
@@ -533,21 +554,35 @@ async function prepare(items) {
   await Promise.race([Promise.all(pending), sleep(POSTER_WAIT_MS)]);
 }
 
-// How a panel dates itself: one day for the three day tabs, and the week's two
-// ends for This Week. Both sides of the range come from weekOffsets, the same
-// function tabWindow asks, so the heading names the week that was fetched.
-function panelDate(tab) {
-  if (tab.span !== 'week') return formatDate(dayFor(tab.offset));
-  const { first, last } = weekOffsets();
-  return formatDateRange(dayFor(first), dayFor(last));
+// How a panel dates itself: one day for the three day tabs, the week's two
+// ends for This Week, and the lookback setting's two ends for Old Episodes.
+// Both sides of the This Week range come from weekOffsets, the same function
+// tabWindow asks, so the heading names the week that was fetched -- and Old
+// Episodes' come from the same settings tabWindow asks for the same reason.
+function panelDate(tab, settings) {
+  if (tab.span === 'week') {
+    const { first, last } = weekOffsets();
+    return formatDateRange(dayFor(first), dayFor(last));
+  }
+  if (tab.span === 'old') return formatDateRange(dayFor(-settings.oldEpisodesDays), dayFor(-2));
+  return formatDate(dayFor(tab.offset));
 }
 
 let activeId = DEFAULT_TAB;
 
+// Every panel but Old Episodes dates itself from the calendar alone, so it is
+// painted straight away. Old Episodes' range depends on the lookback setting,
+// which is not in hand yet at this point -- its date is filled in below, once
+// settingsReady resolves.
 for (const view of views.values()) {
-  view.date.textContent = panelDate(view.tab);
+  if (view.tab.span !== 'old') view.date.textContent = panelDate(view.tab);
   view.button.addEventListener('click', () => selectTab(view.tab.id));
 }
+
+settingsReady.then((settings) => {
+  const view = views.get('old');
+  view.date.textContent = panelDate(view.tab, settings);
+});
 
 document.querySelector('.tabs').addEventListener('keydown', onTabKeydown);
 
@@ -647,7 +682,7 @@ async function load(id, { force = false } = {}) {
     // tab, and it only has to land before a list is painted -- so it overlaps
     // the list cache read rather than holding up the settings check above,
     // which draws no cards at all.
-    const [cached] = await Promise.all([cachedDay(view), showsReady]);
+    const [cached] = await Promise.all([cachedDay(view, settings), showsReady]);
     if (cached) {
       // Artwork this list already knows about is given its short moment to
       // decode first, so the cards go up with their posters on rather than
@@ -679,7 +714,8 @@ async function load(id, { force = false } = {}) {
       // open its instant paint and nothing else. It must not reach the catch
       // below, which would replace episodes that arrived perfectly well with an
       // error state.
-      await writeCache(view.tab.id, items).catch(() => {});
+      const days = view.tab.span === 'old' ? settings.oldEpisodesDays : undefined;
+      await writeCache(view.tab.id, items, { days }).catch(() => {});
     } catch (error) {
       if (cached) {
         // Keep the stale list on screen, and keep saying how old it is -- the
@@ -717,8 +753,11 @@ function missingCredential(settings) {
 // The cache behind one panel. The first ask takes the panel's share of the one
 // read made on open; every ask after that -- a refresh, a second visit -- wants
 // whatever is on disk now rather than a snapshot from when the popup opened.
-async function cachedDay(view) {
-  if (view.tookSharedCache) return readCache(view.tab.id).catch(() => null);
+// Only Old Episodes' entry is keyed by anything beyond the day, so `days` is
+// worked out here and ignored everywhere else -- see lib/cache.js.
+async function cachedDay(view, settings) {
+  const days = view.tab.span === 'old' ? settings.oldEpisodesDays : undefined;
+  if (view.tookSharedCache) return readCache(view.tab.id, { days }).catch(() => null);
   view.tookSharedCache = true;
   return (await cachesReady).get(view.tab.id) ?? null;
 }
@@ -761,9 +800,13 @@ function syncRefresh() {
 
 // The window a tab covers. Three of them are a single day; This Week is Monday
 // through Sunday, and takes the same shape from weekRange so that the panel
-// heading and the request cannot come to disagree about which week it is.
-function tabWindow(tab) {
+// heading and the request cannot come to disagree about which week it is. Old
+// Episodes runs from the lookback setting through two days ago -- Yesterday
+// already owns the day before today -- so it takes settings the other tabs
+// have no use for.
+function tabWindow(tab, settings) {
   if (tab.span === 'week') return weekRange();
+  if (tab.span === 'old') return { from: dayKey(-settings.oldEpisodesDays), to: dayKey(-2) };
   const day = dayKey(tab.offset);
   return { from: day, to: day };
 }
@@ -775,8 +818,8 @@ function tabWindow(tab) {
 // today so it could mark which of its shows were followed. Every tab is a
 // window on `/v1/me/episodes`, every row is a show the account follows, and the
 // flags the popup used to work out by difference arrive on the row.
-function fetchDay(tab, { apiKey }) {
-  return fetchEpisodes({ apiKey, ...tabWindow(tab) });
+function fetchDay(tab, settings) {
+  return fetchEpisodes({ apiKey: settings.apiKey, ...tabWindow(tab, settings) });
 }
 
 function renderEpisodes(view, items) {

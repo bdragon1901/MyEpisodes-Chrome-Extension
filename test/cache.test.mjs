@@ -440,6 +440,29 @@ test('a fresh store is not mistaken for an outdated one', async () => {
 // the version stamp cannot catch that, because the old entry is still valid,
 // just under a name nothing asks for. Pinned rather than derived so the rename
 // has to be made twice on purpose.
-test('LISTS names the four lists the popup keeps', () => {
-  assert.deepEqual([...LISTS], ['yesterday', 'today', 'tomorrow', 'week']);
+test('LISTS names the five lists the popup keeps', () => {
+  assert.deepEqual([...LISTS], ['old', 'yesterday', 'today', 'tomorrow', 'week']);
+});
+
+// Old Episodes' window is a setting, not a constant, so a cached list has to
+// carry the window it was fetched with -- the day alone is not enough to say
+// whether it still matches what is on screen.
+test('an old-episodes entry read back with the window it was written for hits', async () => {
+  await writeCache('old', [{ show: 'A' }], { days: 14 });
+  const cache = await readCache('old', { days: 14 });
+  assert.deepEqual(cache.items, [{ show: 'A' }]);
+});
+
+test('an old-episodes entry is a miss once the lookback setting changes', async () => {
+  await writeCache('old', [{ show: 'A' }], { days: 14 });
+  assert.equal(await readCache('old', { days: 7 }), null);
+  assert.equal((await readCaches({ days: 7 })).get('old'), null);
+});
+
+// The four fixed-window lists never had a `days` concept and nothing should
+// start comparing one for them just because a caller happens to pass it.
+test('a days option leaves the fixed-window lists alone', async () => {
+  await writeCache('today', [{ show: 'A' }]);
+  assert.deepEqual((await readCache('today', { days: 7 })).items, [{ show: 'A' }]);
+  assert.deepEqual((await readCaches({ days: 7 })).get('today').items, [{ show: 'A' }]);
 });

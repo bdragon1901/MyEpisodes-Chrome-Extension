@@ -29,9 +29,6 @@ h1 {
   color: var(--muted);
 }
 
-/* The page holds one form, so the panel is the page's whole body rather than
-   the first of a stack: there is no `.card + .card` spacing left to set, and
-   nothing below it to keep a border from being shared with. */
 .card {
   display: flex;
   flex-direction: column;
@@ -41,6 +38,13 @@ h1 {
   border-radius: 12px;
   background: var(--panel);
   box-shadow: var(--shadow-sm);
+}
+
+/* Two cards on the page now: the API key and the Old Episodes window. Each is
+   its own form, so this is what keeps them from touching rather than anything
+   in .card itself. */
+.card + .card {
+  margin-top: 20px;
 }
 
 .field {
@@ -89,6 +93,40 @@ input:focus-visible {
 .input-row .button {
   flex: none;
   min-width: 64px;
+}
+
+/* A number reads shorter than a key, so it gets a field sized to what it holds
+   rather than the full-width row a password field needs -- and centred against
+   the unit label sitting beside it rather than stretched to its height. */
+.input-row--number {
+  align-items: center;
+}
+
+/* Chrome's native spin buttons read as a stray widget next to the rest of the
+   page's plain-bordered fields, and a value that only moves by 1 is one this
+   setting rarely wants anyway -- typing the number is no slower. */
+input[type='number'] {
+  width: 72px;
+  flex: none;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: right;
+  appearance: textfield;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.input-suffix {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .hint {
@@ -149,4 +187,16 @@ code {
 
 .status--error {
   color: var(--danger);
+}
+
+/* Sits below the card, quiet: it is a legal note, not part of the task. */
+.disclaimer {
+  margin: 16px 2px 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.disclaimer a {
+  color: var(--accent);
 }
